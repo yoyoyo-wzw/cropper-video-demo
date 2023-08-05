@@ -30,8 +30,8 @@ export default {
 
     props: {
         // 容器：指的是包裹media元素和裁切组件的父元素（div > [media, crop-bx]）
-        containerWidth: { type: Number, default: 1000 },    // 容器宽
-        containerHeight: { type: Number, default: 1000 },   // 容器高
+        containerWidth: { type: Number, default: 1000 },    // 容器实际宽
+        containerHeight: { type: Number, default: 1000 },   // 容器实际高
         mediaWidth: { type: Number, default: 0 },   // 媒体在页面上实际展示的宽度
         mediaHeight: { type: Number, default: 0 },   // 媒体在页面上实际展示的高度
         width: { type: Number, default: 80 },   // 默认裁切盒子宽
