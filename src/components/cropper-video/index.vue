@@ -90,7 +90,7 @@
                 </div>
             </div>
         </div>
-        <div class="flex">
+        <div class="btn-box">
             <button
                 type="success"
                 size="small"
@@ -213,7 +213,8 @@ export default {
                 file: this.file,
                 videoUrl,
                 viewWidth: videoViewWidth,
-                viewHeight: videoViewHeight
+                viewHeight: videoViewHeight,
+                ccbl
             };
             this._cropBoxOptions.mediaWidth = videoViewWidth;
             this._cropBoxOptions.mediaHeight = videoViewHeight
@@ -393,9 +394,9 @@ export default {
             let blob = new Blob([data.buffer], { type: 'video/mp4' });
             const newUrl = URL.createObjectURL(blob); // 转为Blob URL
             // console.log(blob, newUrl);
-            this.$emit('cropperOk', { blob, url: newUrl });
             // loading.close();
             this.isStartSplit = false;
+            this.$emit('cropperOk', { blob, url: newUrl });
         },
         onCancel() {
             this.$emit('cancel');
@@ -404,13 +405,14 @@ export default {
         async getVideoFrames() {
             try {
                 const { ffmpeg, fetchFile } = await initFFmpeg();
-                let { fileName, file, duration } = this.videoInfo;
+                let { fileName, file, duration, ccbl } = this.videoInfo;
                 ffmpeg.FS('writeFile', fileName, await fetchFile(file));
-                // 计算每秒需要抽的帧数
-                let step = Math.ceil(20 / duration);
-                const allNum = Math.floor(step * duration);
-                // console.log('step', step, allNum);
+
+                let step = Math.ceil(20 / duration);      // 每秒需要抽的帧数
+                const allNum = Math.floor(step * duration);     // 抽取的总帧数
+                console.log('step', step, allNum);
                 this.isStartFrame = true;
+                const imgWidth = 60;
                 await ffmpeg.run(
                     '-i',
                     fileName,
@@ -423,7 +425,7 @@ export default {
                     '-f',
                     'image2',
                     '-s',
-                    '88*50',
+                    `${imgWidth}*${Math.floor(imgWidth / ccbl)}`,
                     'image-%02d.png'
                 );
                 // ffmpeg -i 2.mp4 -r 1  -ss 0 -vframes 5 -f image2 -s 352x240 image-%02d.jpeg
@@ -567,24 +569,25 @@ export default {
 
             .frame-box {
                 height: 100%;
+                .frames {
+                    user-select: none;
+                    height: 100%;
+                    object-fit: cover;
+                    // &:hover {
+                    //   object-fit: contain;
+                    //   width: 100px !important;
+                    //   position: absolute;
+                    //   top: -60px;
+                    //   // height: 100% !important;
+                    // }
+                }
             }
         }
     }
-    > .flex {
-        justify-content: flex-end;
+    .btn-box {
+        display: flex;
+        justify-content: center;
         margin-top: 20px;
-    }
-    .frames {
-        user-select: none;
-        height: 100%;
-        object-fit: cover;
-        // &:hover {
-        //   object-fit: contain;
-        //   width: 100px !important;
-        //   position: absolute;
-        //   top: -60px;
-        //   // height: 100% !important;
-        // }
     }
 }
 </style>
