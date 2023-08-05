@@ -182,13 +182,26 @@ export default {
         },
     },
     methods: {
-        initCropArea() {
+        initData() {
             const { clientWidth, clientHeight } = this.$refs.videoBoxRef;
+            // 初始化裁切盒子
             this._cropBoxOptions = {
                 ...this.cropBoxOptions,
                 containerWidth: clientWidth,
                 containerHeight: clientHeight
             }
+
+            // 初始化图片帧滑块
+            const shaftRef = this.$refs.shaft;
+            this.shaftWidth = shaftRef.clientWidth;
+
+            const startSlideBarRef = this.$refs.start;
+            this.startSlideWidth = startSlideBarRef.clientWidth;
+            this.data.startLeft = -this.startSlideWidth;
+
+            const endSlideBarRef = this.$refs.end;
+            this.endSlideWidth = endSlideBarRef.clientWidth;
+            this.data.endLeft = this.shaftWidth;
         },
         async updateFile() {
             if (!this.file) return;
@@ -450,18 +463,7 @@ export default {
         },
     },
     mounted() {
-        this.initCropArea();
-
-        const shaftRef = this.$refs.shaft;
-        this.shaftWidth = shaftRef.clientWidth;
-
-        const startSlideBarRef = this.$refs.start;
-        this.startSlideWidth = startSlideBarRef.clientWidth;
-        this.data.startLeft = -this.startSlideWidth;
-
-        const endSlideBarRef = this.$refs.end;
-        this.endSlideWidth = endSlideBarRef.clientWidth;
-        this.data.endLeft = this.shaftWidth;
+        this.initData();
 
         this.updateFile();
     },
