@@ -29,15 +29,17 @@ export default {
     name: 'CropBox',
 
     props: {
-        containerWidth: { type: Number, default: 1000 },  // 容器宽
-        containerHeight: { type: Number, default: 1000 }, // 容器高
-        videoInfo: { type: Object, default: () => ({}) },
+        // 容器：指的是包裹media元素和裁切组件的父元素（div > [media, crop-bx]）
+        containerWidth: { type: Number, default: 1000 },    // 容器宽
+        containerHeight: { type: Number, default: 1000 },   // 容器高
+        mediaWidth: { type: Number, default: 0 },   // 媒体在页面上实际展示的宽度
+        mediaHeight: { type: Number, default: 0 },   // 媒体在页面上实际展示的高度
         width: { type: Number, default: 80 },   // 默认裁切盒子宽
         height: { type: Number, default: 80 },  // 默认裁切盒子高
-        position: { type: String, default: 'center' },
-        minWidth: { type: Number, default: 20 },
-        minHeight: { type: Number, default: 20 },
-        centerBox: { type: Boolean, default: true },
+        position: { type: String, default: 'center' }, // left-top、left-bottom、right-top、right-bottom
+        minWidth: { type: Number, default: 20 },    // 允许裁切的最小宽度
+        minHeight: { type: Number, default: 20 },   // 允许裁切的最小高度
+        centerBox: { type: Boolean, default: true },    // 是否限制在media内拖拽
     },
     data() {
         return {
@@ -51,19 +53,18 @@ export default {
     },
     computed: {
         leftWhite() {
-            return (this.containerWidth - this.videoInfo.viewWidth) / 2
+            return (this.containerWidth - this.mediaWidth) / 2
         },
         topWhite() {
-            return (this.containerHeight - this.videoInfo.viewHeight) / 2
+            return (this.containerHeight - this.mediaHeight) / 2
         },
     },
     watch: {
-        'videoInfo': {
+        '$props': {
             handler () {
                 this.initCropArea();
             },
-            deep: true,
-            immediate: true
+            deep: true
         },
         'cropAreaInfo': {
             handler(val) {
@@ -81,10 +82,9 @@ export default {
     methods: {
         initCropArea() {
             const [ clientWidth, clientHeight ] = [this.containerWidth, this.containerHeight];
-            const { viewWidth: videoViewWidth, viewHeight: videoViewHeight} = this.videoInfo
             
-            const cropAreaWidth = Math.min(videoViewWidth, this.width);
-            const cropAreaHeight = Math.min(videoViewHeight, this.height)
+            const cropAreaWidth = Math.min(this.mediaWidth, this.width);
+            const cropAreaHeight = Math.min(this.mediaHeight, this.height)
             let x, y
             
             switch(this.position) {
@@ -117,7 +117,6 @@ export default {
             }
         },
         areaMousedown (oldE) {
-            const { viewWidth: videoViewWidth, viewHeight: videoViewHeight} = this.videoInfo
             oldE.stopPropagation();
             const {
                 width: oldWidth, 
@@ -138,9 +137,9 @@ export default {
 
                 if (this.centerBox) {
                     newTranslateX = Math.max(newTranslateX, this.leftWhite)
-                    newTranslateX = Math.min(newTranslateX, this.leftWhite + videoViewWidth - oldWidth)
+                    newTranslateX = Math.min(newTranslateX, this.leftWhite + this.mediaWidth - oldWidth)
                     newTranslateY = Math.max(newTranslateY, this.topWhite)
-                    newTranslateY = Math.min(newTranslateY, this.topWhite + videoViewHeight - oldHeight)
+                    newTranslateY = Math.min(newTranslateY, this.topWhite + this.mediaHeight - oldHeight)
                 }
 
                 this.cropAreaInfo.translateX = newTranslateX
@@ -188,9 +187,8 @@ export default {
             }
         },
         updateCropArea (data) {
-            const { viewWidth: videoViewWidth, viewHeight: videoViewHeight} = this.videoInfo
-            const leftWhite = (this.containerWidth - videoViewWidth) / 2;
-            const topWhite = (this.containerHeight - videoViewHeight) / 2;
+            const leftWhite = (this.containerWidth - this.mediaWidth) / 2;
+            const topWhite = (this.containerHeight - this.mediaHeight) / 2;
 
             const { 
                 oldWidth, oldHeight, 
@@ -202,33 +200,42 @@ export default {
                 case 't':
                     newTranslateY = oldTranslateY + moveY;
                     newHeight = oldHeight - moveY;
-            
-                    if (newTranslateY <= topWhite) {
-                        newTranslateY = topWhite
-                        newHeight = oldHeight + oldTranslateY - topWhite
-                    } else if (newTranslateY > (oldHeight + oldTranslateY - this.minHeight)){
-                        newTranslateY = oldHeight + oldTranslateY - this.minHeight
-                        newHeight = this.minHeight
+                    if (this.centerBox) {
+                        if (newTranslateY <= topWhite) {
+                            newTranslateY = topWhite
+                            newHeight = oldHeight + oldTranslateY - topWhite
+                        } else if (newTranslateY > (oldHeight + oldTranslateY - this.minHeight)){
+                            newTranslateY = oldHeight + oldTranslateY - this.minHeight
+                            newHeight = this.minHeight
+                        }
                     }
                     break;
                 case 'r':
-                    newWidth = Math.min(oldWidth + moveX, videoViewWidth + leftWhite - oldTranslateX);
-                    newWidth = Math.max(newWidth, this.minWidth)
+                    newWidth = oldWidth + moveX;
+                    if (this.centerBox) {
+                        newWidth = Math.min(newWidth, this.mediaWidth + leftWhite - oldTranslateX);
+                        newWidth = Math.max(newWidth, this.minWidth)
+                    }
                     break;
                 case 'b':
-                    newHeight = Math.min(oldHeight + moveY, videoViewHeight + topWhite - oldTranslateY);
-                    newHeight = Math.max(newHeight, this.minHeight)
+                    newHeight = oldHeight + moveY;
+                    if (this.centerBox) {
+                        newHeight = Math.min(newHeight, this.mediaHeight + topWhite - oldTranslateY);
+                        newHeight = Math.max(newHeight, this.minHeight)
+                    }
                     break;
                 case 'l':
                     newWidth = oldWidth - moveX;
                     newTranslateX = oldTranslateX + moveX;
-
-                    if (newTranslateX <= leftWhite) {
-                        newTranslateX = leftWhite
-                        newWidth = oldWidth + oldTranslateX - leftWhite
-                    } else if (newTranslateX > (oldWidth + oldTranslateX - this.minWidth)){
-                        newTranslateX = oldWidth + oldTranslateX - this.minWidth
-                        newWidth = this.minWidth
+                    
+                    if (this.centerBox) {
+                        if (newTranslateX <= leftWhite) {
+                            newTranslateX = leftWhite
+                            newWidth = oldWidth + oldTranslateX - leftWhite
+                        } else if (newTranslateX > (oldWidth + oldTranslateX - this.minWidth)){
+                            newTranslateX = oldWidth + oldTranslateX - this.minWidth
+                            newWidth = this.minWidth
+                        }
                     }
                     break;
             }

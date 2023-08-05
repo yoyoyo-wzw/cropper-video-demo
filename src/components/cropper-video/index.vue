@@ -17,8 +17,7 @@
             />
             <cropBox
                 v-show="file"
-                :videoInfo="videoInfo"
-                v-bind="cropBoxInfo"
+                v-bind="cropBoxOptions"
                 @change="cropBoxChange"
             />
         </div>
@@ -153,9 +152,11 @@ export default {
                 viewWidth: 0, // 可视视频宽
                 viewHeight: 0, // 可是视频高
             },
-            cropBoxInfo: {
+            cropBoxOptions: {
                 containerWidth: 0,
                 containerHeight: 0,
+                mediaWidth: 0,
+                mediaHeight: 0,
                 width: 0,
                 height: 0,
                 position: '',
@@ -188,7 +189,7 @@ export default {
     methods: {
         initCropArea() {
             const { clientWidth, clientHeight } = this.$refs.videoBoxRef;
-            this.cropBoxInfo = {
+            this.cropBoxOptions = {
                 containerWidth: clientWidth,
                 containerHeight: clientHeight,
                 width: this.cropAreaWidth,
@@ -221,6 +222,8 @@ export default {
                 viewWidth: videoViewWidth,
                 viewHeight: videoViewHeight
             };
+            this.cropBoxOptions.mediaWidth = videoViewWidth;
+            this.cropBoxOptions.mediaHeight = videoViewHeight
 
             this.updateSlideBar();
 
