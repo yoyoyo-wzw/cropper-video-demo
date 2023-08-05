@@ -17,7 +17,7 @@
             />
             <cropBox
                 v-show="file"
-                v-bind="cropBoxOptions"
+                v-bind="_cropBoxOptions"
                 @change="cropBoxChange"
             />
         </div>
@@ -132,9 +132,7 @@ export default {
         file: { type: File, default: null },
         frames: { type: Array, default: () => [] },
         // 裁切区域
-        cropAreaWidth: { type: Number, default: 80 },
-        cropAreaHeight: { type: Number, default: 80 },
-        cropAreaPosition: { type: String, default: 'center' },
+        cropBoxOptions: { type: Object, default: () => ({}) }
     },
     data() {
         return {
@@ -152,14 +150,11 @@ export default {
                 viewWidth: 0, // 可视视频宽
                 viewHeight: 0, // 可是视频高
             },
-            cropBoxOptions: {
+            _cropBoxOptions: {
                 containerWidth: 0,
                 containerHeight: 0,
                 mediaWidth: 0,
-                mediaHeight: 0,
-                width: 0,
-                height: 0,
-                position: '',
+                mediaHeight: 0
             },
             cropBoxResult: {},
             data: {
@@ -189,12 +184,10 @@ export default {
     methods: {
         initCropArea() {
             const { clientWidth, clientHeight } = this.$refs.videoBoxRef;
-            this.cropBoxOptions = {
+            this._cropBoxOptions = {
+                ...this.cropBoxOptions,
                 containerWidth: clientWidth,
-                containerHeight: clientHeight,
-                width: this.cropAreaWidth,
-                height: this.cropAreaHeight,
-                position: this.cropAreaPosition,
+                containerHeight: clientHeight
             }
         },
         async updateFile() {
@@ -222,8 +215,8 @@ export default {
                 viewWidth: videoViewWidth,
                 viewHeight: videoViewHeight
             };
-            this.cropBoxOptions.mediaWidth = videoViewWidth;
-            this.cropBoxOptions.mediaHeight = videoViewHeight
+            this._cropBoxOptions.mediaWidth = videoViewWidth;
+            this._cropBoxOptions.mediaHeight = videoViewHeight
 
             this.updateSlideBar();
 
