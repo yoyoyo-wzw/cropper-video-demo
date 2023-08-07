@@ -417,6 +417,7 @@ export default {
         // 上传视频后解析视频帧
         async getVideoFrames() {
             try {
+                this.isStartFrame = true;
                 const { ffmpeg, fetchFile } = await initFFmpeg();
                 let { fileName, file, duration, ccbl } = this.videoInfo;
                 ffmpeg.FS('writeFile', fileName, await fetchFile(file));
@@ -424,15 +425,14 @@ export default {
                 let step = Math.ceil(20 / duration);      // 每秒需要抽的帧数
                 const allNum = Math.floor(step * duration);     // 抽取的总帧数
                 console.log('step', step, allNum);
-                this.isStartFrame = true;
                 const imgWidth = 60;
                 await ffmpeg.run(
                     '-i',
                     fileName,
                     '-r',
                     `${step}`,
-                    '-ss',
-                    '1',
+                    // '-ss',
+                    // '1',
                     '-vframes',
                     `${allNum}`,
                     '-f',
