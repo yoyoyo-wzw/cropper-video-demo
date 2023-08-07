@@ -262,6 +262,7 @@ export default {
     cursor: move;
     top: 0;
     left: 0;
+    box-shadow: rgba(0, 0, 0, .5) 0 0 0 5000px;
     .crop-line {
         position: absolute;
         display: block;
